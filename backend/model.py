@@ -13,7 +13,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 
 # Set paths and image size
 image_size = (224, 224)  # ResNet50 input size
-save_folder = 'backend\\final\\face_data'  # Folder with your dataset
+save_folder = 'backend\\final\\face_data'  
 batch_size = 32
 
 # Step 1: Load and preprocess the data
