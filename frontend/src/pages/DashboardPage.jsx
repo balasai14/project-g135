@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useAuthStore } from "../store/authStore";
-import { formatDate } from "../utils/date";
-import {useState } from "react";
+
+import { useState } from "react";
 import VideoFeed from "./VideoFeed";
 import FaceRecognition from "./FaceRecognition";
 
@@ -47,29 +47,7 @@ const DashboardPage = () => {
                     <p className='text-gray-300'>Email: {user.email}</p>
                 </motion.div>
 
-                {/* Account Activity */}
-                <motion.div
-                    className='p-4 bg-gray-800 bg-opacity-50 rounded-lg border border-gray-700'
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                >
-                    <h3 className='text-xl font-semibold text-green-400 mb-3'>Account Activity</h3>
-                    <p className='text-gray-300'>
-                        <span className='font-bold'>Joined: </span>
-                        {new Date(user.createdAt).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                        })}
-                    </p>
-                    <p className='text-gray-300'>
-                        <span className='font-bold'>Last Login: </span>
-                        {formatDate(user.lastLogin)}
-                    </p>
-                </motion.div>
-
-                {/* Button to toggle Crowd Counting */}
+                {/* Video Feed Toggle */}
                 <motion.div
                     className='mt-4'
                     initial={{ opacity: 0, y: 20 }}
@@ -84,7 +62,7 @@ const DashboardPage = () => {
                             font-bold rounded-lg shadow-lg hover:from-green-600 hover:to-emerald-700
                             focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900'
                     >
-                        {showVideoFeed ? "Hide Crowd Counting" : "Show Crowd Counting"}
+                        {showVideoFeed ? "Hide Video Feed" : "Show Video Feed"}
                     </motion.button>
                 </motion.div>
 
@@ -100,7 +78,7 @@ const DashboardPage = () => {
                     </motion.div>
                 )}
 
-                {/* Button to toggle Face Recognition */}
+                {/* Face Recognition Toggle */}
                 <motion.div
                     className='mt-4'
                     initial={{ opacity: 0, y: 20 }}

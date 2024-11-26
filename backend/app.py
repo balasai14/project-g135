@@ -8,7 +8,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app) 
-# Load the YOLOv8 model (small version for faster processing)
+
 model = YOLO('yolo11s.pt')  # Ensure you have the yolov8s.pt model file
 
 def generate_frames():

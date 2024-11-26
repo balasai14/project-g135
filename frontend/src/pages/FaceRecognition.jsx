@@ -1,103 +1,80 @@
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as faceapi from "face-api.js";
 
 const FaceRecognition = () => {
     const videoRef = useRef(null);
-    const [loading, setLoading] = useState(true);
-    const [recognizedFace, setRecognizedFace] = useState("No face detected");
+    const canvasRef = useRef(null);
+    const [modelsLoaded, setModelsLoaded] = useState(false);
 
     useEffect(() => {
         const loadModels = async () => {
-            setLoading(true);
-            const CDN_URL = "https://github.com/justadudewhohacks/face-api.js/raw/master/weights";
-
-            // Load models directly from the CDN
-            await faceapi.nets.tinyFaceDetector.loadFromUri(CDN_URL);
-            await faceapi.nets.faceLandmark68Net.loadFromUri(CDN_URL);
-            await faceapi.nets.faceRecognitionNet.loadFromUri(CDN_URL);
-            setLoading(false);
-        };
-
-        const startVideo = () => {
-            navigator.mediaDevices
-                .getUserMedia({ video: true })
-                .then((stream) => {
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                    }
-                })
-                .catch((err) => console.error("Error accessing webcam: ", err));
-        };
-
-        loadModels().then(startVideo);
-
-        // Cleanup on component unmount
-        return () => {
-            if (videoRef.current && videoRef.current.srcObject) {
-                // eslint-disable-next-line react-hooks/exhaustive-deps
-                videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+            try {
+                // Use the correct path for model files in the public folder
+                await Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri('/models/tiny_face_detector_model-weights_manifest.json'),
+                    faceapi.nets.faceLandmark68Net.loadFromUri('/models/face_landmark_68_model-weights_manifest.json'),
+                    faceapi.nets.faceRecognitionNet.loadFromUri('/models/face_recognition_model-weights_manifest.json'),
+                ]);
+                setModelsLoaded(true);
+                startVideo();
+            } catch (error) {
+                console.error("Failed to load face recognition models:", error);
             }
         };
+
+        loadModels();
     }, []);
 
-    const handleVideoPlay = async () => {
-        const labeledFaceDescriptors = await loadLabeledImages();
-        const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6);
-
-        setInterval(async () => {
-            if (videoRef.current) {
-                const detections = await faceapi
-                    .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-                    .withFaceLandmarks()
-                    .withFaceDescriptors();
-
-                if (detections.length > 0) {
-                    const results = detections.map((d) =>
-                        faceMatcher.findBestMatch(d.descriptor)
-                    );
-                    setRecognizedFace(results[0].toString());
-                } else {
-                    setRecognizedFace("No face detected");
+    const startVideo = () => {
+        navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then((stream) => {
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
                 }
-            }
-        }, 1000);
+            })
+            .catch((error) => console.error("Error accessing webcam:", error));
     };
 
-    const loadLabeledImages = () => {
-        const labels = ["User"]; // Replace with your label(s)
-        return Promise.all(
-            labels.map(async (label) => {
-                const descriptions = [];
-                for (let i = 1; i <= 3; i++) {
-                    const img = await faceapi.fetchImage(`/images/${label}/${i}.jpg`);
-                    const detections = await faceapi
-                        .detectSingleFace(img)
-                        .withFaceLandmarks()
-                        .withFaceDescriptor();
-                    descriptions.push(detections.descriptor);
+    const handleVideoPlay = () => {
+        const video = videoRef.current;
+
+        setInterval(async () => {
+            if (video && modelsLoaded) {
+                const detections = await faceapi.detectAllFaces(
+                    video,
+                    new faceapi.TinyFaceDetectorOptions()
+                );
+
+                const canvas = canvasRef.current;
+                if (canvas) {
+                    const displaySize = { width: video.videoWidth, height: video.videoHeight };
+                    faceapi.matchDimensions(canvas, displaySize);
+
+                    const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+                    faceapi.draw.drawDetections(canvas, resizedDetections);
                 }
-                return new faceapi.LabeledFaceDescriptors(label, descriptions);
-            })
-        );
+            }
+        }, 100);
     };
 
     return (
-        <div className="face-recognition">
-            {loading ? (
-                <p>Loading models...</p>
-            ) : (
-                <div>
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        muted
-                        onPlay={handleVideoPlay}
-                        style={{ width: "100%", borderRadius: "10px" }}
-                    />
-                    <p className="mt-4 text-center text-gray-300">
-                        <strong>Recognized Face:</strong> {recognizedFace}
-                    </p>
-                </div>
+        <div className="relative">
+            <video
+                ref={videoRef}
+                autoPlay
+                muted
+                onPlay={handleVideoPlay}
+                className="rounded-lg shadow-md w-full"
+            ></video>
+            <canvas
+                ref={canvasRef}
+                className="absolute top-0 left-0 rounded-lg"
+                style={{ width: "100%", height: "100%" }}
+            ></canvas>
+            {!modelsLoaded && (
+                <p className="text-center text-gray-400 mt-4">Loading models...</p>
             )}
         </div>
     );
