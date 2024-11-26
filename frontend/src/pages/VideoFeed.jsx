@@ -11,7 +11,7 @@
 
 // export default VideoFeed;
 
-import React from 'react';
+
 
 const VideoFeed = () => {
     return (
