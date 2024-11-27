@@ -93,7 +93,7 @@ const DashboardPage = () => {
                             font-bold rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-700
                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900'
                     >
-                        {showFaceRecognition ? "Hide Face Recognition" : "Show Face Recognition"}
+                        {showFaceRecognition ? "Hide Multi Face Recognition" : "Show Multi Face Recognition"}
                     </motion.button>
                 </motion.div>
 
